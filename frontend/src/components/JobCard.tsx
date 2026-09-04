@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { JobMatch } from "@/types";
+import { buildLinkedInPeopleSearchUrl } from "@/lib/linkedin";
+import { useAppliedJobs } from "@/lib/appliedJobs";
 
 interface JobCardProps {
   job: JobMatch;
+  alumniOrg?: string;
+  alumniSchool?: string;
 }
 
 function ScoreGauge({ score }: { score: number }) {
@@ -74,8 +78,13 @@ function SourceBadge({ source }: { source: string }) {
   );
 }
 
-export default function JobCard({ job }: JobCardProps) {
+export default function JobCard({ job, alumniOrg, alumniSchool }: JobCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const { isApplied, toggleApplied } = useAppliedJobs();
+  const applied = isApplied(job.url);
+
+  const hasAlumniSearch = Boolean(alumniOrg?.trim() || alumniSchool?.trim());
+  const alumniLabel = alumniOrg?.trim() || alumniSchool?.trim() || "";
 
   const descriptionPreview =
     job.description.length > 150 && !expanded
@@ -90,7 +99,13 @@ export default function JobCard({ job }: JobCardProps) {
   };
 
   return (
-    <div className="group rounded-2xl border border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-slate-600 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 overflow-hidden animate-slide-up">
+    <div
+      className={`group rounded-2xl border transition-all duration-200 hover:shadow-lg hover:shadow-black/20 overflow-hidden animate-slide-up ${
+        applied
+          ? "border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-500/60"
+          : "border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-slate-600"
+      }`}
+    >
       <div className="p-5">
         <div className="flex items-start gap-4">
           <ScoreGauge score={job.match_score} />
@@ -102,7 +117,17 @@ export default function JobCard({ job }: JobCardProps) {
                 </h3>
                 <p className="text-slate-300 text-sm mt-0.5 font-medium">{job.company}</p>
               </div>
-              <SourceBadge source={job.source} />
+              <div className="flex items-center gap-1.5">
+                {applied && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 text-xs font-medium">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Applied
+                  </span>
+                )}
+                <SourceBadge source={job.source} />
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
@@ -231,22 +256,57 @@ export default function JobCard({ job }: JobCardProps) {
             {job.match_score}/100
           </span>
         </div>
-        <a
-          href={job.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/30 hover:text-indigo-200 text-xs font-semibold transition-all"
-        >
-          View Job
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-            />
-          </svg>
-        </a>
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+          <button
+            type="button"
+            onClick={() => toggleApplied(job.url)}
+            aria-pressed={applied}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+              applied
+                ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30"
+                : "bg-slate-700/40 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100"
+            }`}
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            {applied ? "Applied" : "Mark as Applied"}
+          </button>
+          {hasAlumniSearch && (
+            <a
+              href={buildLinkedInPeopleSearchUrl({
+                organization: alumniOrg,
+                school: alumniSchool,
+                company: job.company,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Search LinkedIn for ${alumniLabel} connections at ${job.company}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 hover:bg-blue-500/20 hover:text-blue-200 text-xs font-semibold transition-all"
+            >
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+              </svg>
+              Find {alumniLabel}
+            </a>
+          )}
+          <a
+            href={job.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/30 hover:text-indigo-200 text-xs font-semibold transition-all"
+          >
+            View Job
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   );

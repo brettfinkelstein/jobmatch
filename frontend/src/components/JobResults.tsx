@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { JobMatch, WorkArrangement } from "@/types";
 import JobCard from "./JobCard";
+import AlumniPanel from "./AlumniPanel";
 
 interface JobResultsProps {
   jobs: JobMatch[];
   totalFound: number;
   onReset: () => void;
+  defaultSchool?: string;
 }
 
 type SortOption = "score" | "date" | "salary";
@@ -18,10 +20,12 @@ const ARRANGEMENT_FILTER_OPTIONS: { value: WorkArrangement; label: string }[] = 
   { value: "onsite", label: "On-site" },
 ];
 
-export default function JobResults({ jobs, totalFound, onReset }: JobResultsProps) {
+export default function JobResults({ jobs, totalFound, onReset, defaultSchool }: JobResultsProps) {
   const [sortBy, setSortBy] = useState<SortOption>("score");
   const [filterScore, setFilterScore] = useState(0);
   const [filterArrangements, setFilterArrangements] = useState<WorkArrangement[]>([]);
+  const [alumniOrg, setAlumniOrg] = useState("Theta Chi");
+  const [alumniSchool, setAlumniSchool] = useState(defaultSchool ?? "");
 
   const toggleArrangementFilter = (value: WorkArrangement) => {
     setFilterArrangements((current) =>
@@ -103,6 +107,13 @@ export default function JobResults({ jobs, totalFound, onReset }: JobResultsProp
           </div>
         ))}
       </div>
+
+      <AlumniPanel
+        organization={alumniOrg}
+        onOrganizationChange={setAlumniOrg}
+        school={alumniSchool}
+        onSchoolChange={setAlumniSchool}
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 bg-slate-800/60 border border-slate-700 rounded-xl px-3 py-2">
@@ -210,7 +221,7 @@ export default function JobResults({ jobs, totalFound, onReset }: JobResultsProp
               key={job.id}
               style={{ animationDelay: `${index * 60}ms` }}
             >
-              <JobCard job={job} />
+              <JobCard job={job} alumniOrg={alumniOrg} alumniSchool={alumniSchool} />
             </div>
           ))}
         </div>

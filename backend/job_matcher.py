@@ -23,7 +23,7 @@ MAX_OUTPUT_TOKENS = 4096
 # Model used for job scoring. Haiku 4.5 is ~3x cheaper than Sonnet 4.6 on both
 # input and output for this kind of structured classification task. Override
 # via env var to A/B against a different model without a code change.
-MATCHING_MODEL = os.getenv("JOB_MATCHING_MODEL", "claude-haiku-4-5")
+MATCHING_MODEL = os.getenv("JOB_MATCHING_MODEL", "claude-haiku-4-5-20251001")
 
 # Truncate job descriptions to keep token usage manageable
 MAX_DESCRIPTION_CHARS = 2000

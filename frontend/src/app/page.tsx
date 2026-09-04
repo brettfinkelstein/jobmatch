@@ -313,6 +313,7 @@ export default function Home() {
               jobs={searchResponse.jobs}
               totalFound={searchResponse.total_found}
               onReset={handleReset}
+              defaultSchool={parsedResume?.education[0]}
             />
             <div className="mt-8 text-center">
               <button
